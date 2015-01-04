@@ -13,6 +13,12 @@ qemu:
 runqemu:
 	make -f raspi.make runqemu
 
+debugqemu:
+	make -f raspi.make debugqemu
+
+rungdb:
+	make -f raspi.make rungdb
+
 pitft:
 	@echo "*** Preparing image for Adafruit TFT panel. ***"
 	make -f raspi.make pitft

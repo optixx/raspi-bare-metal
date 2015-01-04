@@ -17,13 +17,19 @@ qemu: OBJECTS = $(addprefix $(BUILD),qemu.o raycasting.o main.o)
 qemu: clean $(BUILD) qemu-main kernel.elf
 
 qemu-main: 
-	$(ARMGNU)-gcc -Wall -nostdlib -nostartfiles -ffreestanding -std=gnu99 -DQEMU=1 -c $(SOURCE)main.c -o $(BUILD)main.o
+	$(ARMGNU)-gcc -Wall -g -nostdlib -nostartfiles -ffreestanding -std=gnu99 -DQEMU=1 -c $(SOURCE)main.c -o $(BUILD)main.o
 
 $(QEMUTARGET): $(OBJECTS) $(BUILD)start.o $(LINKER)
-	$(ARMGNU)-ld --no-undefined -Map $(MAP) -T $(LINKER) -o kernel.elf $(BUILD)start.o $(OBJECTS) -L $(LIB) -lm -lc -lgcc
+	$(ARMGNU)-ld -g --no-undefined -Map $(MAP) -T $(LINKER) -o kernel.elf $(BUILD)start.o $(OBJECTS) -L $(LIB) -lm -lc -lgcc
 
 runqemu: 
 	qemu-system-arm -m 128 -kernel kernel.elf -serial stdio -machine integratorcp
+
+debugqemu: qemu 
+	qemu-system-arm -m 128 -kernel kernel.elf -serial stdio -machine integratorcp -S -s
+
+rungdb:
+	cgdb -d arm-none-eabi-gdb -- --init-command=gdbinit
 
 pitft: OBJECTS = $(addprefix $(BUILD),bcm2835.o ili9340.o pitft.o raycasting.o main.o)
 pitft: clean $(BUILD) pitft-main all
@@ -44,13 +50,13 @@ $(TARGET) : $(BUILD)output.elf
 	$(ARMGNU)-objcopy $(BUILD)output.elf -O binary $(TARGET) 
 
 $(BUILD)output.elf : $(OBJECTS) $(BUILD)start.o $(LINKER)
-	$(ARMGNU)-ld --no-undefined -Map $(MAP) -T $(LINKER) -o $(BUILD)output.elf $(BUILD)start.o $(OBJECTS) -L $(LIB) -lm -lc -lgcc
+	$(ARMGNU)-ld -g --no-undefined -Map $(MAP) -T $(LINKER) -o $(BUILD)output.elf $(BUILD)start.o $(OBJECTS) -L $(LIB) -lm -lc -lgcc
 
 $(BUILD)%.o: $(SOURCE)%.c $(BUILD)
-	$(ARMGNU)-gcc -Wall -nostdlib -nostartfiles -ffreestanding -std=gnu99 -c $< -o $@
+	$(ARMGNU)-gcc -Wall -g -nostdlib -nostartfiles -ffreestanding -std=gnu99 -c $< -o $@
 
 $(BUILD)start.o: $(SOURCE)start.s $(BUILD)
-	$(ARMGNU)-as -I $(START) $< -o $@
+	$(ARMGNU)-as -g -I $(START) $< -o $@
 
 $(BUILD):
 	mkdir $@
